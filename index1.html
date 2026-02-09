@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Valentine Week • Neutral Interactive Demo</title>
+
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --bg-top:#2b0f1e;
+    --bg-deep:#0b0508;
+    --glass:rgba(255,255,255,.08);
+    --line:rgba(255,255,255,.14);
+    --accent1:#ff4d6d;
+    --accent2:#ff9aa2;
+    --soft:#ffb6c1;
+    --text:#fff;
+  }
+
+  body{
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;
+    height:100vh;
+    background:radial-gradient(circle at 20% -10%, var(--bg-top), var(--bg-deep) 60%);
+    color:var(--text);
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* Progress dots */
+  .progress{
+    position:fixed;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:6px;
+    z-index:5;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:rgba(255,255,255,.22);
+    transition:all .25s ease;
+  }
+  .dot.active{
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    box-shadow:0 0 10px rgba(255,154,162,.6);
+    transform:scale(1.2);
+  }
+
+  /* Pages */
+  .page{
+    display:none;
+    height:100vh;
+    width:100vw;
+    padding:24px;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+  }
+  .page.active{display:flex}
+
+  /* Card */
+  .card{
+    background:var(--glass);
+    backdrop-filter:blur(14px) saturate(1.1);
+    border:1px solid var(--line);
+    border-radius:26px;
+    padding:28px;
+    width:min(92vw,420px);
+    text-align:center;
+    box-shadow:0 30px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.06);
+    animation:fadeUp .6s ease;
+  }
+  @keyframes fadeUp{
+    from{opacity:0;transform:translateY(20px)}
+    to{opacity:1;transform:none}
+  }
+
+  /* Text */
+  h1{font-size:clamp(1.8rem,6vw,2.6rem)}
+  p{
+    font-size:clamp(1rem,4vw,1.08rem);
+    opacity:.92;
+    margin:14px 0 12px;
+  }
+  .hint{opacity:.7;font-size:.95rem}
+
+  /* Buttons row just below the card content */
+  .actions{
+    margin-top:16px;               /* a few steps below the text */
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  button{
+    border:none;
+    padding:14px 22px;
+    border-radius:50px;
+    font-size:1rem;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .2s ease, background .2s ease;
+    user-select:none;
+    outline:none;
+  }
+  .yes-btn{
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    color:#fff;
+    box-shadow:0 10px 24px rgba(255,77,109,.32);
+  }
+  .yes-btn:active{transform:scale(.98)}
+  .no-btn{
+    background:transparent;
+    color:var(--soft);
+    border:1px solid rgba(255,182,193,.45);
+    position:relative; /* we move with translate to keep it in flow */
+    z-index:1;
+  }
+  .no-btn:active{transform:scale(.98)}
+
+  /* Hearts (used on last slide and overlay) */
+  .heart{
+    position:fixed; /* floats across viewport */
+    bottom:-30px;
+    font-size:22px;
+    animation:rise 6.5s linear forwards;
+    pointer-events:none;
+    filter:drop-shadow(0 6px 12px rgba(255,77,109,.25));
+    z-index:60; /* above overlay elements */
+  }
+  @keyframes rise{
+    0%{transform:translateY(0) scale(.8) rotate(0deg);opacity:0}
+    15%{opacity:1}
+    100%{transform:translateY(-110vh) scale(1.2) rotate(15deg);opacity:0}
+  }
+
+  /* Overlay for final image + fireworks — centered image */
+  #finalOverlay{
+    position:fixed;
+    inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,.75), rgba(0,0,0,.6));
+    z-index:50;
+
+    /* Perfect centering */
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+
+    /* Hidden until shown */
+    visibility:hidden;
+    opacity:0;
+    transition:opacity .35s ease;
+  }
+  #finalOverlay.show{
+    visibility:visible;
+    opacity:1;
+  }
+
+  #fwCanvas{
+    position:absolute;
+    top:0;left:0;
+    width:100%;
+    height:42vh;       /* fireworks burst on the top portion */
+    pointer-events:none;
+  }
+  .final-image{
+    max-width:90vw;
+    max-height:70vh;
+    object-fit:contain;
+    border-radius:16px;
+    box-shadow:0 20px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.1) inset;
+    animation:pop 380ms ease forwards;
+    opacity:0; transform:scale(.92);
+    z-index:55;
+  }
+  @keyframes pop{
+    to{opacity:1; transform:scale(1)}
+  }
+
+  /* Toast (optional message on No click) */
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:12%;
+    transform:translateX(-50%) translateY(20px);
+    background:rgba(0,0,0,.7);
+    color:#fff;
+    padding:12px 16px;
+    border-radius:12px;
+    font-size:.95rem;
+    box-shadow:0 10px 24px rgba(0,0,0,.35);
+    opacity:0;
+    pointer-events:none;
+    z-index:70;
+    transition:opacity .22s ease, transform .22s ease;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  /* Small screens */
+  @media (max-width:380px){
+    .actions{ gap:10px; }
+    button{ padding:12px 16px; font-size:.96rem; }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- Progress -->
+<div class="progress" id="progress"></div>
+
+<!-- Slides: All Valentine’s week days (neutral text) -->
+<div class="page active"><div class="card">
+  <h1>🌹 Rose Day</h1>
+  <p>Welcome! Let’s go through the days.</p>
+  <p class="hint">Pick an option below ⬇️</p>
+  <div class="actions">
+    <button class="yes-btn">Yes</button>
+    <button class="no-btn">No</button>
+  </div>
+</div></div>
+
+<div class="page"><div class="card">
+  <h1>💍 Propose Day</h1>
+  <p>Little steps, one by one.</p>
+  <p class="hint">Pick an option below ⬇️</p>
+  <div class="actions">
+    <button class="yes-btn">Yes</button>
+    <button class="no-btn">No</button>
+  </div>
+</div></div>
+
+<div class="page"><div class="card">
+  <h1>🍫 Chocolate Day</h1>
+  <p>Keep it sweet and simple.</p>
+  <p class="hint">Pick an option below ⬇️</p>
+  <div class="actions">
+    <button class="yes-btn">Yes</button>
+    <button class="no-btn">No</button>
+  </div>
+</div></div>
+
+<div class="page"><div class="card">
+  <h1>🧸 Teddy Day</h1>
+  <p>Soft corners, cozy vibes.</p>
+  <p class="hint">Pick an option below ⬇️</p>
+  <div class="actions">
+    <button class="yes-btn">Yes</button>
+    <button class="no-btn">No</button>
+  </div>
+</div></div>
+
+<div class="page"><div class="card">
+  <h1>🤝 Promise Day</h1>
+  <p>Consistency makes the difference.</p>
+  <p class="hint">Pick an option below ⬇️</p>
+  <div class="actions">
+    <button class="yes-btn">Yes</button>
+    <button class="no-btn">No</button>
+  </div>
+</div></div>
+
+<div class="page"><div class="card">
+  <h1>🤗 Hug Day</h1>
+  <p>Warmth you can count on.</p>
+  <p class="hint">Pick an option below ⬇️</p>
+  <div class="actions">
+    <button class="yes-btn">Yes</button>
+    <button class="no-btn">No</button>
+  </div>
+</div></div>
+
+<div class="page"><div class="card">
+  <h1>💋 Kiss Day</h1>
+  <p>Moments that make you smile.</p>
+  <p class="hint">Pick an option below ⬇️</p>
+  <div class="actions">
+    <button class="yes-btn">Yes</button>
+    <button class="no-btn">No</button>
+  </div>
+</div></div>
+
+<div class="page" id="valentine"><div class="card">
+  <h1>❤️ Valentine’s Day</h1>
+  <p>Final slide — press YES for a surprise.</p>
+  <p class="hint">Pick an option below ⬇️</p>
+  <div class="actions">
+    <button class="yes-btn">Yes</button>
+    <button class="no-btn">No</button>
+  </div>
+</div></div>
+
+<!-- Final popup overlay with centered image + fireworks -->
+<div id="finalOverlay" aria-hidden="true">
+  <canvas id="fwCanvas"></canvas>
+  <img
+    class="final-image"
+    src="happy%20valentine%27%20day.png"
+    alt="Final celebration image"
+  />
+</div>
+
+<!-- Optional toast -->
+<div class="toast" id="toast">You don't have the option baby!!</div>
+
+<script>
+  const pages = document.querySelectorAll(".page");
+  const lastIndex = pages.length - 1;
+  const toast = document.getElementById("toast");
+  const progressContainer = document.getElementById("progress");
+  const finalOverlay = document.getElementById("finalOverlay");
+  const fwCanvas = document.getElementById("fwCanvas");
+  const fwCtx = fwCanvas.getContext("2d");
+
+  let current = 0;
+  let heartsIntervalId = null;
+  let overlayHeartsIntervalId = null;
+  let toastTimer = null;
+  let fireworksRAF = null;
+  let particles = [];
+
+  /* Build progress dots */
+  const dots = [];
+  for(let i=0;i<pages.length;i++){
+    const d = document.createElement("div");
+    d.className = "dot" + (i===0 ? " active" : "");
+    progressContainer.appendChild(d);
+    dots.push(d);
+  }
+  function updateDots(){
+    dots.forEach((d, i)=> d.classList.toggle("active", i===current));
+  }
+
+  /* Navigation: YES => next slide (if any) */
+  function goNext(){
+    if(current === lastIndex) return;  // no next after last
+    pages[current].classList.remove("active");
+    current = Math.min(current+1, lastIndex);
+    pages[current].classList.add("active");
+    updateDots();
+    if(current === lastIndex) startLastSlideHearts();
+  }
+
+  /* Hearts (continuous on last slide; denser on overlay) */
+  function createHeart(z = 60){
+    const h = document.createElement("div");
+    h.className = "heart";
+    h.textContent = ["❤️","💖","💘","💕"][Math.floor(Math.random()*4)];
+    h.style.left = Math.random()*100 + "vw";
+    h.style.fontSize = (18 + Math.random()*24) + "px";
+    h.style.animationDuration = (6 + Math.random()*2) + "s";
+    h.style.zIndex = z; // ensure above
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(), 9000);
+  }
+  function startLastSlideHearts(){
+    if(heartsIntervalId) return;
+    heartsIntervalId = setInterval(createHeart, 320);
+  }
+  function stopLastSlideHearts(){
+    if(heartsIntervalId){
+      clearInterval(heartsIntervalId);
+      heartsIntervalId = null;
+    }
+  }
+  function startOverlayHearts(){
+    if(overlayHeartsIntervalId) return;
+    overlayHeartsIntervalId = setInterval(()=>createHeart(65), 200);
+  }
+  function stopOverlayHearts(){
+    if(overlayHeartsIntervalId){
+      clearInterval(overlayHeartsIntervalId);
+      overlayHeartsIntervalId = null;
+    }
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> toast.classList.remove("show"), 1600);
+  }
+
+  /* Wire Yes/No buttons on all slides */
+  function wireButtons(){
+    const yesButtons = document.querySelectorAll(".yes-btn");
+    const noButtons  = document.querySelectorAll(".no-btn");
+
+    yesButtons.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        // If on last slide, show overlay with image + fireworks
+        if(current === lastIndex){
+          stopLastSlideHearts();
+          openFinalOverlay();
+        } else {
+          goNext();
+        }
+      });
+    });
+
+    // No button runs away on hover/touch/mousedown; shows toast on click
+    function randomNudge(target){
+      const maxX = 120; // px horizontal range
+      const maxY = 60;  // px vertical range
+      const x = Math.round((Math.random()*2-1) * maxX);
+      const y = Math.round((Math.random()*2-1) * maxY);
+      target.style.transform = `translate(${x}px, ${y}px)`;
+    }
+    noButtons.forEach(btn=>{
+      ["mouseover","mousedown","touchstart"].forEach(evt=>{
+        btn.addEventListener(evt, (e)=>{
+          if(evt === "touchstart") e.preventDefault(); // move before tap lands
+          randomNudge(btn);
+        }, {passive: evt !== "touchstart"});
+      });
+      btn.addEventListener("click", (e)=>{
+        e.preventDefault();
+        showToast("You don't have the option baby!!");
+        randomNudge(btn);
+      });
+    });
+  }
+
+  /* Overlay open/close with fireworks */
+  function resizeCanvas(){
+    const rect = finalOverlay.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    fwCanvas.width = Math.floor(rect.width * dpr);
+    fwCanvas.height = Math.floor((rect.height * 0.42) * dpr);
+    fwCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function openFinalOverlay(){
+    finalOverlay.classList.add("show");
+    finalOverlay.setAttribute("aria-hidden","false");
+    resizeCanvas();
+    startOverlayHearts();
+    startFireworks();
+    // Click anywhere to close (optional). Remove next line to disable.
+    finalOverlay.addEventListener("click", closeFinalOverlay);
+  }
+
+  function closeFinalOverlay(){
+    stopOverlayHearts();
+    stopFireworks();
+    finalOverlay.classList.remove("show");
+    finalOverlay.setAttribute("aria-hidden","true");
+    finalOverlay.removeEventListener("click", closeFinalOverlay);
+  }
+
+  /* Simple fireworks at top: particle bursts */
+  class Particle{
+    constructor(x, y, angle, speed, hue){
+      this.x = x; this.y = y;
+      this.vx = Math.cos(angle) * speed;
+      this.vy = Math.sin(angle) * speed;
+      this.alpha = 1;
+      this.life = 60 + Math.random()*20;
+      this.hue = hue;
+      this.size = 2 + Math.random()*2;
+    }
+    step(){
+      // slight gravity and drag
+      this.vy += 0.02;
+      this.vx *= 0.992;
+      this.vy *= 0.992;
+      this.x += this.vx;
+      this.y += this.vy;
+      this.alpha *= 0.985;
+      this.life--;
+      return this.life > 0 && this.alpha > 0.03;
+    }
+    draw(ctx){
+      ctx.globalAlpha = Math.max(this.alpha, 0);
+      ctx.fillStyle = `hsl(${this.hue}, 100%, 60%)`;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function burst(x, y){
+    const count = 28 + Math.floor(Math.random()*12);
+    const hue = Math.floor(Math.random()*360);
+    for(let i=0;i<count;i++){
+      const angle = (Math.PI*2) * (i / count) + (Math.random()*0.2 - 0.1);
+      const speed = 1.5 + Math.random()*3.2;
+      particles.push(new Particle(x, y, angle, speed, hue));
+    }
+  }
+
+  function startFireworks(){
+    const W = fwCanvas.width;
+    const H = fwCanvas.height;
+    let lastSpawn = 0;
+
+    function loop(ts){
+      fireworksRAF = requestAnimationFrame(loop);
+      // spawn bursts ~ every 450-700ms
+      if(!lastSpawn || ts - lastSpawn > (450 + Math.random()*250)){
+        const x = 0.1*W + Math.random()*0.8*W;   // across width
+        const y = 0.15*H + Math.random()*0.35*H; // top portion
+        burst(x, y);
+        lastSpawn = ts;
+      }
+
+      // fade trail
+      fwCtx.globalCompositeOperation = "destination-out";
+      fwCtx.fillStyle = "rgba(0,0,0,0.25)";
+      fwCtx.fillRect(0,0,W,H);
+      fwCtx.globalCompositeOperation = "lighter";
+
+      // update/draw particles
+      particles = particles.filter(p=>{
+        const alive = p.step();
+        if(alive) p.draw(fwCtx);
+        return alive;
+      });
+    }
+    loop(0);
+  }
+
+  function stopFireworks(){
+    if(fireworksRAF){
+      cancelAnimationFrame(fireworksRAF);
+      fireworksRAF = null;
+    }
+    // Clear canvas
+    fwCtx.clearRect(0,0,fwCanvas.width, fwCanvas.height);
+    particles = [];
+  }
+
+  /* Optional: swipe/keyboard support for “next” */
+  let startX=null,startY=null;
+  window.addEventListener("touchstart",(e)=>{
+    if(e.touches.length===1){
+      startX=e.touches[0].clientX;
+      startY=e.touches[0].clientY;
+    }
+  },{passive:true});
+  window.addEventListener("touchend",(e)=>{
+    if(startX===null) return;
+    const dx = (e.changedTouches[0].clientX - startX);
+    const dy = (e.changedTouches[0].clientY - startY);
+    if(Math.abs(dx) > 40 && Math.abs(dy) < 60){
+      if(dx < 0) goNext(); // swipe left to go next
+    }
+    startX=startY=null;
+  });
+  window.addEventListener("keydown",(e)=>{
+    if(["ArrowRight"," ","Enter"].includes(e.key)) goNext();
+  });
+
+  // Handle resize for correct canvas DPI
+  window.addEventListener("resize", ()=>{
+    if(finalOverlay.classList.contains("show")){
+      resizeCanvas();
+    }
+  });
+
+  // Init
+  wireButtons();
+  if(current === lastIndex) startLastSlideHearts();
+</script>
+
+</body>
+</html>
