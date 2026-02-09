@@ -9,8 +9,8 @@
 *{margin:0;padding:0;box-sizing:border-box}
 
 :root{
-  --bg-top:#2b0f1e;
-  --bg-deep:#0b0508;
+  --bg1:#2b0f1e;
+  --bg2:#0b0508;
   --glass:rgba(255,255,255,.08);
   --line:rgba(255,255,255,.14);
   --accent1:#ff4d6d;
@@ -21,28 +21,9 @@
 body{
   font-family:system-ui,-apple-system,BlinkMacSystemFont;
   height:100vh;
-  background:radial-gradient(circle at 20% -10%, var(--bg-top), var(--bg-deep) 60%);
+  background:radial-gradient(circle at 20% -10%, var(--bg1), var(--bg2) 60%);
   color:#fff;
   overflow:hidden;
-}
-
-/* Progress dots */
-.progress{
-  position:fixed;
-  top:10px;
-  left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:6px;
-  z-index:10;
-}
-.dot{
-  width:8px;height:8px;border-radius:50%;
-  background:rgba(255,255,255,.25);
-}
-.dot.active{
-  background:linear-gradient(135deg,var(--accent1),var(--accent2));
-  box-shadow:0 0 10px rgba(255,154,162,.6);
 }
 
 /* Pages */
@@ -67,7 +48,7 @@ body{
   box-shadow:0 30px 60px rgba(0,0,0,.5);
 }
 
-h1{font-size:clamp(1.8rem,6vw,2.6rem)}
+h1{font-size:clamp(1.8rem,6vw,2.5rem)}
 p{opacity:.9;margin:14px 0}
 
 .actions{
@@ -95,7 +76,7 @@ button{
   position:relative;
 }
 
-/* Hearts */
+/* Floating hearts */
 .heart{
   position:fixed;
   bottom:-30px;
@@ -112,17 +93,17 @@ button{
 
 /* FINAL OVERLAY */
 #finalOverlay{
-  visibility:hidden;
-  opacity:0;
   position:fixed;
   inset:0;
-  background:linear-gradient(180deg,rgba(0,0,0,.75),rgba(0,0,0,.6));
-  z-index:50;
+  background:linear-gradient(180deg,rgba(0,0,0,.88),rgba(0,0,0,.8));
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  transition:opacity .35s ease;
+  visibility:hidden;
+  opacity:0;
+  transition:opacity .4s ease;
+  z-index:50;
 }
 #finalOverlay.show{
   visibility:visible;
@@ -139,20 +120,27 @@ button{
   pointer-events:none;
 }
 
-/* Final image sizing — SAFE */
+/* FINAL IMAGE — ENLARGED & BLOCKING BACKGROUND */
 .final-image{
-  width:min(80vw,360px);
-  max-height:40vh;
+  width:min(92vw,460px);
+  max-height:60vh;
   object-fit:contain;
-  border-radius:16px;
-  box-shadow:0 20px 60px rgba(0,0,0,.6);
+
+  background:rgba(0,0,0,0.6);
+  padding:24px;
+
+  border-radius:26px;
+  box-shadow:
+    0 40px 90px rgba(0,0,0,.85),
+    inset 0 0 0 1px rgba(255,255,255,.15);
+
   z-index:55;
-  margin-bottom:18px;
+  margin-bottom:24px;
 }
 
 /* Final text */
 .final-text{
-  font-size:clamp(1.5rem,5vw,2.3rem);
+  font-size:clamp(1.6rem,5vw,2.4rem);
   text-align:center;
   z-index:55;
 }
@@ -161,48 +149,46 @@ button{
 
 <body>
 
-<div class="progress" id="progress"></div>
-
 <!-- Slides -->
 <div class="page active"><div class="card">
-<h1>🌹 Rose Day</h1><p>Let’s begin.</p>
+<h1>🌹 Rose Day</h1><p>Let’s begin 💖</p>
 <div class="actions"><button class="yes-btn">Yes</button><button class="no-btn">No</button></div>
 </div></div>
 
 <div class="page"><div class="card">
-<h1>💍 Propose Day</h1><p>Step by step.</p>
+<h1>💍 Propose Day</h1><p>Step by step…</p>
 <div class="actions"><button class="yes-btn">Yes</button><button class="no-btn">No</button></div>
 </div></div>
 
 <div class="page"><div class="card">
-<h1>🍫 Chocolate Day</h1><p>Sweet moments.</p>
+<h1>🍫 Chocolate Day</h1><p>Sweet moments 🍫</p>
 <div class="actions"><button class="yes-btn">Yes</button><button class="no-btn">No</button></div>
 </div></div>
 
 <div class="page"><div class="card">
-<h1>🧸 Teddy Day</h1><p>Soft & cozy.</p>
+<h1>🧸 Teddy Day</h1><p>Soft & cozy 🧸</p>
 <div class="actions"><button class="yes-btn">Yes</button><button class="no-btn">No</button></div>
 </div></div>
 
 <div class="page"><div class="card">
-<h1>🤗 Hug Day</h1><p>Warmth.</p>
+<h1>🤗 Hug Day</h1><p>Warm hugs 🤗</p>
 <div class="actions"><button class="yes-btn">Yes</button><button class="no-btn">No</button></div>
 </div></div>
 
 <div class="page"><div class="card">
-<h1>💋 Kiss Day</h1><p>Moments.</p>
+<h1>💋 Kiss Day</h1><p>Moments to remember 💋</p>
 <div class="actions"><button class="yes-btn">Yes</button><button class="no-btn">No</button></div>
 </div></div>
 
 <div class="page"><div class="card">
-<h1>❤️ Valentine’s Day</h1><p>Will you be mine?</p>
+<h1>❤️ Valentine’s Day</h1><p>Will you be my Valentine?</p>
 <div class="actions"><button class="yes-btn">Yes</button><button class="no-btn">No</button></div>
 </div></div>
 
-<!-- FINAL OVERLAY -->
+<!-- FINAL SCREEN -->
 <div id="finalOverlay">
   <canvas id="fwCanvas"></canvas>
-  <img src="proposal.jpg" class="final-image" alt="Girl proposing boy">
+  <img src="proposal.jpg" class="final-image" alt="Proposal">
   <div class="final-text">
     I love you 🧿🥺<br>
     Happy Valentine’s Day ❤️
@@ -211,28 +197,16 @@ button{
 
 <script>
 const pages=[...document.querySelectorAll(".page")];
-const progress=document.getElementById("progress");
 const overlay=document.getElementById("finalOverlay");
 const fwCanvas=document.getElementById("fwCanvas");
 const fwCtx=fwCanvas.getContext("2d");
-
-let current=0, sparks=[];
-
-/* Progress dots */
-const dots=[];
-pages.forEach((_,i)=>{
-  const d=document.createElement("div");
-  d.className="dot"+(i===0?" active":"");
-  progress.appendChild(d); dots.push(d);
-});
-const updateDots=()=>dots.forEach((d,i)=>d.classList.toggle("active",i===current));
+let current=0,sparks=[];
 
 /* Navigation */
 document.querySelectorAll(".yes-btn").forEach(b=>b.onclick=()=>{
   if(current===pages.length-1){openFinal();return;}
   pages[current].classList.remove("active");
   current++; pages[current].classList.add("active");
-  updateDots();
 });
 document.querySelectorAll(".no-btn").forEach(b=>{
   b.onmouseover=b.ontouchstart=()=>b.style.transform=
@@ -248,7 +222,7 @@ function heart(){
   setTimeout(()=>h.remove(),6000);
 }
 
-/* Firecracker fireworks (TOP) */
+/* Firecracker fireworks */
 function resize(){
   fwCanvas.width=innerWidth;
   fwCanvas.height=innerHeight*0.35;
@@ -262,8 +236,7 @@ class Spark{
     this.x=x;this.y=y;
     this.vx=Math.cos(a)*s;
     this.vy=Math.sin(a)*s;
-    this.life=60;
-    this.alpha=1;
+    this.life=60;this.alpha=1;
     this.color=`hsl(${Math.random()*360},100%,60%)`;
   }
   update(){
@@ -285,27 +258,20 @@ class Spark{
 function explode(){
   const x=Math.random()*fwCanvas.width;
   const y=Math.random()*fwCanvas.height*0.6;
-  for(let i=0;i<50;i++) sparks.push(new Spark(x,y));
+  for(let i=0;i<55;i++) sparks.push(new Spark(x,y));
 }
 
-function startFirecrackers(){
-  setInterval(explode,700);
-  (function animate(){
-    fwCtx.clearRect(0,0,fwCanvas.width,fwCanvas.height);
-    sparks=sparks.filter(s=>{
-      s.update(); s.draw();
-      return s.life>0 && s.alpha>0;
-    });
-    requestAnimationFrame(animate);
-  })();
-}
-
-/* Final */
 function openFinal(){
+  pages[current].classList.remove("active");
   overlay.classList.add("show");
   resize();
-  startFirecrackers();
+  setInterval(explode,700);
   setInterval(heart,260);
+  (function anim(){
+    fwCtx.clearRect(0,0,fwCanvas.width,fwCanvas.height);
+    sparks=sparks.filter(s=>{s.update();s.draw();return s.life>0&&s.alpha>0});
+    requestAnimationFrame(anim);
+  })();
 }
 </script>
 
